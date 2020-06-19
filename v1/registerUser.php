@@ -3,11 +3,11 @@ require_once "../includes/DbOperation.php";
 
 $response = array();
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-    if(isset($_POST['username']) and isset($_POST['password'])){
+    if(isset($_POST['username']) and isset($_POST['password']) and isset($_POST['email'])){
         // operate data
         $db = new DbOperator();
         $db->__contruct();
-        $result = $db->createUser($_POST['username'], $_POST['password']);
+        $result = $db->createUser($_POST['username'], $_POST['password'], $_POST['email']);
         if($result == 1){
             $response['error'] = false;
             $response['message'] = 'Successfully register new user';

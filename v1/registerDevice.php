@@ -4,12 +4,12 @@ require_once "../includes/DbOperation.php";
 $response = array();
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
     if(isset($_POST['device_id']) and isset($_POST['user_id']) and isset($_POST['device_name']) 
-    and isset($_POST['linked_device_id']) and isset($_POST['linked_device_name'])){
+    and isset($_POST['linked_device_id']) and isset($_POST['linked_device_name']) and isset($_POST['threshold'])){
         // operate data
         $db = new DbOperator();
         $db->__contruct();
-        $result = $db->addDevice($_POST['device_id'], $_POST['user_id'],
-                                $_POST['device_name'], $_POST['linked_device_id'],  $_POST['linked_device_name']);
+        $result = $db->addDevice($_POST['user_id'], $_POST['device_id'], $_POST['device_name'],
+         $_POST['linked_device_id'],  $_POST['linked_device_name'], $_POST['threshold']);
         
         if($result == 1){
             $response['error'] = false;
