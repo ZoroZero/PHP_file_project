@@ -9,20 +9,22 @@ if(!isset($_POST['topic']) or !isset($_POST['type']) or !isset($_POST['device_id
 	echo "Failed";
 }
 //Setup MQTT server
-// $server = '13.67.44.229';     // change if necessary
-// $port = 1883;                     // change if necessary
-// $username = 'An';                   // set your username
-// $password = '01597894561230';                   // set your password
+$server = '13.67.44.229';   
+$port = 1883;                   
+$username = 'An';                  
+$password = '01597894561230';                
 
 // $server = '52.187.125.59';  
 // $port = 1883;          
 // $username = 'BKvm2';                   
 // $password = 'Hcmut_CSE_2020'; 
 
-$server = '52.163.220.103';  
-$port = 1883;          
-$username = 'BKvm2';                   
-$password = 'Hcmut_CSE_2020'; 
+// Server trí
+// $server = '52.163.220.103';  
+// $port = 1883;          
+// $username = 'BKvm2';                   
+// $password = 'Hcmut_CSE_2020'; 
+
 $client_id = 'phpMQTT-subscriber'; 
 
 $mqtt = new Bluerhinos\phpMQTT($server, $port, $client_id.rand());
@@ -64,7 +66,10 @@ function procMsg($topic, $msg){
 		if(strpos($_POST['type'][$index], "TempHumi") !== false){
 			$db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"), "Temp", $messages[0]->values[0]);
 			$db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"), "Humid", $messages[0]->values[1]);
-			if($device_info[0]['threshold'] < $messages[0]->values[0])
+			$threshold = explode(":",$device_info[0]['threshold']);
+			//echo($threshold[0]);
+
+			if(intval($threshold[0]) < $messages[0]->values[0] || intval($threshold[1]) < $messages[0]->values[1])
 			{
 				if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-0") !== false){
 					$response['message'] = "Turn on";
@@ -84,7 +89,7 @@ function procMsg($topic, $msg){
 		}
 		else{
 			$db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"), $_POST['type'][$index], $messages[0]->values[0]);
-			if($device_info[0]['threshold'] < $messages[0]->values[0])
+			if(intval($device_info[0]['threshold']) < $messages[0]->values[0])
 			{
 				if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-0") !== false){
 					$response['message'] = "Turn on";

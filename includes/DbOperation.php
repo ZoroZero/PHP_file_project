@@ -85,12 +85,12 @@
                 return 0;
             }
             else{
-                $convert_threshold = (int)$threshold;
+                
                 $convert_user_id = (int)$user_id;
                 $stmt =$this->con->prepare("INSERT INTO 
                 devices(user_id, input_id, input_name, output_id, output_name, threshold) 
                 VALUES (?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("issssi", $convert_user_id, $device_id,  $device_name, $linked_device_id, $linked_device_name, $convert_threshold);
+                $stmt->bind_param("isssss", $convert_user_id, $device_id,  $device_name, $linked_device_id, $linked_device_name, $threshold);
                 if($stmt->execute()){
                     return 1;
                 }
@@ -110,11 +110,9 @@
         }
 
         // Change threshold on user_id and device id
-        function changeThreshold($user_id, $device_id, $threshold){
-            $convert_id = (int)$user_id;
-            $convert_threshold = (int)$threshold;
-            $stmt =$this->con->prepare("UPDATE devices SET device_measurement = ? WHERE user_id = ? AND device_id = ?");
-            $stmt->bind_param("iii", $convert_measurement, $convert_id, $convert_threshold);
+        function changeThreshold($device_id, $threshold){
+            $stmt =$this->con->prepare("UPDATE devices SET threshold = ? WHERE input_id = ?");
+            $stmt->bind_param("ss", $threshold, $device_id);
             if($stmt->execute()){
                 return true;
             }

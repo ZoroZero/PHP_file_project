@@ -3,20 +3,18 @@ require_once "../includes/DbOperation.php";
 
 $response = array();
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-    if(isset($_POST['device_id'])){
+    if(isset($_POST['device_id']) and isset($_POST['new_threshold'])){
         // operate data
         $db = new DbOperator();
         $db->__contruct();
-        $check = $db->checkIfHasMeasurement($_POST['device_id']);
-        $result = $db->getMeasurement($_POST['device_id']);
-        if($check){
+        $result = $db->changeThreshold($_POST['device_id'], $_POST['new_threshold']);
+        if($result){
             $response['error'] = false;
-            $response['message'] = 'Successfully get measurement';
-            $response['reading'] = $result;
+            $response['message'] = 'Successfully change threshold';
         }
         else{
             $response['error'] = false;
-            $response['message'] = 'No reading found';
+            $response['message'] = 'Unable to change threshold';
         }
     }
     else{
