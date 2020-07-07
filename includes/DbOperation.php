@@ -70,9 +70,9 @@
         // Get device from user id
         function getDevices($user_id){
             $id = (int)$user_id;
-            $stmt =$this->con->prepare("SELECT input_id as device_id, input_name as device_name, output_id as linked_device_id, output_name as linked_device_name 
+            $stmt =$this->con->prepare("SELECT input_id as device_id, input_name as device_name, output_id as linked_device_id, output_name as linked_device_name, threshold 
             from devices where user_ID = ? UNION
-            SELECT output_id as device_id, output_name as device_name, input_id as linked_device_id, input_name as linked_device_name 
+            SELECT output_id as device_id, output_name as device_name, input_id as linked_device_id, input_name as linked_device_name, threshold
             from devices where user_ID = ?;");
             $stmt->bind_param("ii", $id, $id);
             $stmt->execute();
@@ -160,7 +160,7 @@
             $stmt =$this->con->prepare("SELECT input_device_id,  measurement, date, type, (TIMESTAMPDIFF(SECOND, SYSDATE(), date)) as different
             FROM input_devices 
             WHERE input_device_id = ?
-            ORDER BY different DESC;");
+            ORDER BY different DESC, type;");
             $stmt->bind_param("s", $device_id);
             $stmt->execute();
             //$result = $stmt->store_result();
