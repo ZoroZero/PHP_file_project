@@ -63,12 +63,12 @@ function procMsg($topic, $msg){
 		//echo $_POST['type'][$index];
 		// $response[$_POST['device_id'][$index]] = array();
 		$response["position"] = intval($_POST['position'][$index]);
-		if(strpos($_POST['type'][$index], "TempHumi") !== false){
-			$db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"), "Temp", $messages[0]->values[0]);
-			$db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"), "Humid", $messages[0]->values[1]);
+		if(strpos($_POST['type'][$index], "Temperature") !== false){
+			$measurement = strval($messages[0]->values[0]).":".strval($messages[0]->values[1]);
+			$db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"),  $_POST['type'][$index], $measurement);
+			// $db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"), "Humid", $messages[0]->values[1]);
 			$threshold = explode(":",$device_info[0]['threshold']);
 			//echo($threshold[0]);
-
 			if(intval($threshold[0]) < $messages[0]->values[0] || intval($threshold[1]) < $messages[0]->values[1])
 			{
 				if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-0") !== false){

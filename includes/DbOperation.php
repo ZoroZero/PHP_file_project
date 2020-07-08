@@ -70,10 +70,20 @@
         // Get device from user id
         function getDevices($user_id){
             $id = (int)$user_id;
-            $stmt =$this->con->prepare("SELECT input_id as device_id, input_name as device_name, output_id as linked_device_id, output_name as linked_device_name, threshold 
-            from devices where user_ID = ? UNION
-            SELECT output_id as device_id, output_name as device_name, input_id as linked_device_id, input_name as linked_device_name, threshold
-            from devices where user_ID = ?;");
+            $stmt =$this->con->prepare("SELECT input_id as device_id, input_name as device_name, output_id as linked_device_id, output_name as linked_device_name, threshold, measurement as status, date
+            from devices ds LEFT JOIN (SELECT* from input_devices ids
+                                    where date = (SELECT MAX(date) 
+                                      from input_devices 
+                                      where input_device_id = ids.input_device_id) ) id on ds.input_id = id.input_device_id 
+            where user_ID = ?
+            GROUP BY ds.input_id
+            UNION
+            SELECT output_id as device_id, output_name as device_name, input_id as linked_device_id, input_name as linked_device_name, threshold, status, date
+            from devices ds JOIN output_devices ods on ds.output_id = ods.output_device_id
+            where user_ID = ? and date = (SELECT Max(date)
+                                           FROM output_devices
+                                           WHERE output_devices.output_device_id = output_id)
+            Group by output_id");
             $stmt->bind_param("ii", $id, $id);
             $stmt->execute();
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -123,9 +133,8 @@
 
         // Insert device measurement
         function insertInputDeviceMeasurement($device_id, $date, $type, $measurement){
-            $convert_measurement = (int)$measurement;
             $stmt =$this->con->prepare("INSERT INTO input_devices(input_device_id, date, type, measurement) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("sssi", $device_id, $date, $type, $measurement);
+            $stmt->bind_param("ssss", $device_id, $date, $type, $measurement);
             if($stmt->execute()){
                 return true;
             }
@@ -235,5 +244,19 @@
             $stmt->bind_param("i",$id);
             $stmt->execute();
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        //Remove plant from user
+        function removePlant($user_id, $plant_name, $buy_date, $buy_location){
+            $id = (int)$user_id;
+            $stmt =$this->con->prepare("DELETE FROM plant WHERE User_ID = ? and Plant_name = ? and Buy_date = ? and Buy_location = ?");
+            $stmt->bind_param("isss",$id, $plant_name, $buy_date, $buy_location);
+            if($stmt->execute()){
+                return true;
+            }
+            else{
+                return false;
+            }
+            
         }
     }

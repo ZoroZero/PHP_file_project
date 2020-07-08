@@ -13,6 +13,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
             $response['user_ID'] = $user['user_ID'];
             $response['username'] = $user['username'];
             $response['email'] = $user['email'];
+            $response['password'] = $user['password'];
         }
         else{
             $response['error'] = true;

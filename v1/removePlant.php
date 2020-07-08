@@ -3,18 +3,21 @@ require_once "../includes/DbOperation.php";
 
 $response = array();
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
-    if(isset($_POST['device_id']) and isset($_POST['date']) and isset($_POST['type']) and isset($_POST['measurement'])){
+    if(isset($_POST['plant_name']) and isset($_POST['user_id']) and isset($_POST['buy_date']) 
+            and isset($_POST['buy_location'])){
         // operate data
         $db = new DbOperator();
         $db->__contruct();
-        $result = $db->insertInputDeviceMeasurement($_POST['device_id'], $_POST['date'], $_POST['type'], $_POST['measurement']);
-        if($result){
+        $result = $db->removePlant($_POST['user_id'],$_POST['plant_name'],$_POST['buy_date'],
+        $_POST['buy_location']);
+        
+        if($result == true){
             $response['error'] = false;
-            $response['message'] = 'Successfully change measurement';
+            $response['message'] = 'Successfully remove plant';
         }
-        else{
+        elseif($result == false){
             $response['error'] = true;
-            $response['message'] = 'Something went wrong';
+            $response['message'] = 'Some error occur';
         }
     }
     else{
