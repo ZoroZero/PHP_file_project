@@ -1,14 +1,29 @@
 <?php
 require "../includes/DbOperation.php";
 require "../includes/phpMQTT.php";
+require '../includes/Constants.php';
 set_time_limit(5);
 date_default_timezone_set("Asia/Ho_Chi_Minh");
 // if($_SERVER['REQUEST_METHOD'] == 'POST'){
+
+function checkOverlimit($measurement, $threshold, $margin){
+	if($measurement - $margin > $threshold){
+		return 1;
+	}
+	else if($measurement + $margin < $threshold){
+		return 2;
+	}
+	else{
+		return 0;
+	}
+}
+
 if(!isset($_POST['topic']) or !isset($_POST['type']) or !isset($_POST['device_id'])){
 	// operate data
 	echo "Failed";
 }
 //Setup MQTT server
+$client_id = 'phpMQTT-subscriber'; 
 $server = '13.67.44.229';   
 $port = 1883;                   
 $username = 'An';                  
@@ -25,7 +40,6 @@ $password = '01597894561230';
 // $username = 'BKvm2';                   
 // $password = 'Hcmut_CSE_2020'; 
 
-$client_id = 'phpMQTT-subscriber'; 
 
 $mqtt = new Bluerhinos\phpMQTT($server, $port, $client_id.rand());
 if(!$mqtt->connect(true, NULL, $username, $password)) {
@@ -63,48 +77,72 @@ function procMsg($topic, $msg){
 		//echo $_POST['type'][$index];
 		// $response[$_POST['device_id'][$index]] = array();
 		$response["position"] = intval($_POST['position'][$index]);
+		$diff = strtotime(date("Y-m-d H:i:s")) - strtotime($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['date']);
 		if(strpos($_POST['type'][$index], "Temperature") !== false){
+			// Insert data into database
 			$measurement = strval($messages[0]->values[0]).":".strval($messages[0]->values[1]);
 			$db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"),  $_POST['type'][$index], $measurement);
-			// $db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"), "Humid", $messages[0]->values[1]);
+
 			$threshold = explode(":",$device_info[0]['threshold']);
-			//echo($threshold[0]);
-			if(intval($threshold[0]) < $messages[0]->values[0] || intval($threshold[1]) < $messages[0]->values[1])
-			{
-				if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-0") !== false){
-					$response['message'] = "Turn on";
+			// Check if there are any activity within 30s span
+			if($diff > 30){
+				// If there is check if need to turn on
+				if(checkOverlimit($messages[0]->values[0], intval($threshold[0]), TEMPERATURE_ERROR_MARGIN) == 1 
+				|| checkOverlimit($messages[0]->values[1], intval($threshold[1]), HUMIDITY_ERROR_MARGIN) == 1)
+				{
+					if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-0") !== false){
+						$response['message'] = "Turn on";
+					}
+					else{
+						$response['message'] = "No change";
+					}
+				}
+
+				// Check if need to turn off
+				else if(checkOverlimit($messages[0]->values[0], intval($threshold[0]), TEMPERATURE_ERROR_MARGIN) == 2 
+				|| checkOverlimit($messages[0]->values[1], intval($threshold[1]), HUMIDITY_ERROR_MARGIN) == 2){
+					if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-255") !== false){
+						$response['message'] = "Turn off";
+					}
+					else{
+						$response['message'] = "No change";
+					}
 				}
 				else{
 					$response['message'] = "No change";
 				}
+
 			}
 			else{
-				if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-255") !== false){
-					$response['message'] = "Turn off";
-				}
-				else{
-					$response['message'] = "No change";
-				}
+				$response['message'] = "No change";
 			}
 		}
 		else{
 			$db->insertInputDeviceMeasurement($_POST['device_id'][$index], date("Y-m-d H:i:s"), $_POST['type'][$index], $messages[0]->values[0]);
-			if(intval($device_info[0]['threshold']) < $messages[0]->values[0])
-			{
-				if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-0") !== false){
-					$response['message'] = "Turn on";
+			if($diff > 30){
+				if(checkOverlimit($messages[0]->values[0], intval($device_info[0]['threshold']), LIGHT_ERROR_MARGIN) == 1)
+				{
+					if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-0") !== false){
+						$response['message'] = "Turn on";
+					}
+					else{
+						$response['message'] = "No change";
+					}
+				}
+				else if(checkOverlimit($messages[0]->values[0], intval($device_info[0]['threshold']), LIGHT_ERROR_MARGIN) == 2){
+					if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-255") !== false){
+						$response['message'] = "Turn off";
+					}
+					else{
+						$response['message'] = "No change";
+					}
 				}
 				else{
 					$response['message'] = "No change";
 				}
 			}
 			else{
-				if(strpos($db->getOutputStatus($_POST['linked_device_id'][$index])[0]['status'], "On-255") !== false){
-					$response['message'] = "Turn off";
-				}
-				else{
-					$response['message'] = "No change";
-				}
+				$response['message'] = "No change";
 			}
 		}
 
