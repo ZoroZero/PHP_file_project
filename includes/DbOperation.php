@@ -218,7 +218,8 @@
         }
 
         // Add plant to database
-        function addPlant($user_id , $plant_name, $buy_date, $buy_location, $amount, $linked_sensor_id){
+        function addPlant($user_id , $plant_name, $buy_date, $buy_location, $amount, 
+                        $linked_device_id, $linked_device_name){
             if($this->checkPlantExist($user_id, $plant_name, $buy_date)){
                 return 0;
             }
@@ -226,9 +227,10 @@
                 $convert_user_id = (int)$user_id;
                 //$_newDate = date("Y-m-d",strtotime($buy_date));
                 $convert_amount = (int)$amount;
-                $stmt =$this->con->prepare("INSERT INTO plant(`User_ID`, `Plant_name`, `Buy_date`, `Buy_location`, `Amount`, linked_sensor_id) 
-                VALUES (?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("isssis", $convert_user_id, $plant_name, $buy_date, $buy_location, $convert_amount, $linked_sensor_id);
+                $stmt =$this->con->prepare("INSERT INTO plant(`User_ID`, `Plant_name`, `Buy_date`, `Buy_location`, 
+                `Amount`, linked_device_id, linked_device_name) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("isssiss", $convert_user_id, $plant_name, $buy_date, $buy_location, $convert_amount, $linked_device_id, $linked_device_name);
                 if($stmt->execute()){
                     return 1;
                 }
