@@ -93,29 +93,16 @@ function procMsg($topic, $msg){
                     $changeTemp = checkOverlimit($messages[0]->values[0], intval($threshold[0]), TEMPERATURE_ERROR_MARGIN);
                     $changeHumid = checkOverlimit($messages[0]->values[1], intval($threshold[1]), HUMIDITY_ERROR_MARGIN);
                     $lightIntensity = intval(explode('-', $status)[1]);
-                    if($changeTemp != 0 ||  $changeHumid != 0)
-                    {
 
-                        $change = intval(max($changeTemp * getStep(intval($threshold[0]), MAX_TEMPERATURE, TEMPERATURE_ERROR_MARGIN),
-                                    $changeHumid * getStep(intval($threshold[1]), MAX_HUMIDITY, HUMIDITY_ERROR_MARGIN)));
-                        $newIntensity = min(max(255 - $change, 0), 255);
-                        if($lightIntensity != $newIntensity){
-                            $response['message'] = "Need change";
-                            $response['new_intensity'] = $newIntensity;
-                        }
-                        else{
-                            $response['message'] = "No change";
-                        }
-                            
+                    $change = intval(max($changeTemp * getStep(intval($threshold[0]), MAX_TEMPERATURE, TEMPERATURE_ERROR_MARGIN),
+                                $changeHumid * getStep(intval($threshold[1]), MAX_HUMIDITY, HUMIDITY_ERROR_MARGIN)));
+                    $newIntensity = min(max(255 - $change, 0), 255);
+                    if($lightIntensity != $newIntensity){
+                        $response['message'] = "Need change";
+                        $response['new_intensity'] = $newIntensity;
                     }
-                    else {
-                        if($lightIntensity != 255){
-                            $response['message'] = "Need change";
-                            $response['new_intensity'] = 255;
-                        }
-                        else{
-                            $response['message'] = "No change";
-                        }
+                    else{
+                        $response['message'] = "No change";
                     }
                 }
 			}
@@ -138,28 +125,15 @@ function procMsg($topic, $msg){
                     $changeLight = checkOverlimit($messages[0]->values[0], intval($device_info[0]['threshold']), LIGHT_ERROR_MARGIN);
                     $lightIntensity = intval(explode('-', $status)[1]);
                     // If there is check if need change
-                    if($changeLight != 0)
-                    {
-                        $change = intval($changeLight * getStep(intval($device_info[0]['threshold']), MAX_LIGHT, LIGHT_ERROR_MARGIN));
-                        $newIntensity = min(max(255 - $change, 0), 255);
+
+                    $change = intval($changeLight * getStep(intval($device_info[0]['threshold']), MAX_LIGHT, LIGHT_ERROR_MARGIN));
+                    $newIntensity = min(max(255 - $change, 0), 255);
+                    if($lightIntensity != $newIntensity){
                         $response['message'] = "Need change";
                         $response['new_intensity'] = $newIntensity;
-                        if($lightIntensity != $newIntensity){
-                            $response['message'] = "Need change";
-                            $response['new_intensity'] = $newIntensity;
-                        }
-                        else{
-                            $response['message'] = "No change";
-                        }
                     }
-                    else {
-                        if($lightIntensity != 255){
-                            $response['message'] = "Need change";
-                            $response['new_intensity'] = 255;
-                        }
-                        else{
-                            $response['message'] = "No change";
-                        }
+                    else{
+                        $response['message'] = "No change";
                     }
                 }
             }
