@@ -206,6 +206,72 @@
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
+        function getInputDevicesWithType($user_id,$type){
+            $id = (int)$user_id;
+            $stmt =$this->con->prepare("SELECT input_id as input_device_id 
+            from devices where user_ID = ?  
+            INTERSECT
+            SELECT  input_device_id as input_device_id
+            from input_devices where type = ?;");
+            $stmt->bind_param("ss", $user_id, $type);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        function getMeasurementWithType($device_id,$type){
+            $stmt =$this->con->prepare("SELECT input_device_id,  measurement, date, type, (TIMESTAMPDIFF(SECOND, SYSDATE(), date)) as different
+            FROM input_devices 
+            WHERE input_device_id = ? AND TYPE = ?
+            ORDER BY different DESC;");
+            $stmt->bind_param("ss", $device_id,$type);
+            $stmt->execute();
+            //$result = $stmt->store_result();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        function getDeviceByType($type){
+            $stmt =$this->con->prepare("SELECT DISTINCT input_device_id
+            FROM input_devices 
+            WHERE type = ?;");
+            $stmt->bind_param("s", $type);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+
+        function getValueToday($device_id,$type){
+
+            $stmt =$this->con->prepare(" SELECT input_device_id,  measurement, date
+            FROM input_devices
+            WHERE DATE(date) = DATE(NOW()) AND input_device_id = ? AND TYPE = ?
+            ORDER BY date DESC;");
+            $stmt->bind_param("ss", $device_id,$type);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+
+        function getValueThisMonth($device_id,$type){
+
+            $stmt =$this->con->prepare(" SELECT input_device_id,  measurement, date
+            FROM input_devices
+            WHERE MONTH(date) = MONTH(NOW()) AND input_device_id = ? AND TYPE = ?
+            ORDER BY date DESC;");
+            $stmt->bind_param("ss", $device_id,$type);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        function getValueThisYear($device_id,$type){
+
+            $stmt =$this->con->prepare(" SELECT input_device_id,  measurement, date
+            FROM input_devices
+            WHERE YEAR(date) = YEAR(NOW()) AND input_device_id = ? AND TYPE = ?
+            ORDER BY date DESC;");
+            $stmt->bind_param("ss", $device_id,$type);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
         ############################################# Plant operation #############################################
         // Check if plant all ready exist
         function checkPlantExist($user_id, $plant_name, $buydate){
