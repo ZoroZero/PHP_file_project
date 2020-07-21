@@ -195,7 +195,7 @@
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
-
+        // Get output status
         function getOutputStatus($output_id){
             $stmt =$this->con->prepare("SELECT output_device_id, date, status, TIMESTAMPDIFF(SECOND, SYSDATE(), date) as different 
             FROM `output_devices` 
@@ -206,6 +206,7 @@
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
+        // Get input device with given type
         function getInputDevicesWithType($user_id,$type){
             $id = (int)$user_id;
             $stmt =$this->con->prepare("SELECT input_id as input_device_id 
@@ -218,6 +219,7 @@
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
+        // Get all measurement with given type
         function getMeasurementWithType($device_id,$type){
             $stmt =$this->con->prepare("SELECT input_device_id,  measurement, date, type, (TIMESTAMPDIFF(SECOND, SYSDATE(), date)) as different
             FROM input_devices 
@@ -229,6 +231,7 @@
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
+        // Get device by type
         function getDeviceByType($type){
             $stmt =$this->con->prepare("SELECT DISTINCT input_device_id
             FROM input_devices 
@@ -238,7 +241,7 @@
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
-
+        // Get all measurement today with given device id
         function getValueToday($device_id,$type){
 
             $stmt =$this->con->prepare(" SELECT input_device_id,  measurement, date
@@ -250,7 +253,7 @@
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
-
+        // Get all measurement this month with given device id
         function getValueThisMonth($device_id,$type){
 
             $stmt =$this->con->prepare(" SELECT input_device_id,  measurement, date
@@ -262,6 +265,7 @@
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
+        // Get all measurement this year with given device id
         function getValueThisYear($device_id,$type){
 
             $stmt =$this->con->prepare(" SELECT input_device_id,  measurement, date
@@ -272,6 +276,18 @@
             $stmt->execute();
             return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
+
+        // Get all measurement today with given device id and date
+        function getValueInCustomDate($device_id,$type,$day,$month,$year){
+            $stmt =$this->con->prepare(" SELECT input_device_id,  measurement, date
+            FROM input_devices
+            WHERE input_device_id = ? AND TYPE = ? AND DAY(date) = ? AND MONTH(date) = ? AND YEAR(date) = ?
+            ORDER BY date DESC;");
+            $stmt->bind_param("ssiii", $device_id,$type,$day,$month,$year);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
         ############################################# Plant operation #############################################
         // Check if plant all ready exist
         function checkPlantExist($user_id, $plant_name, $buydate){
@@ -326,5 +342,23 @@
                 return false;
             }
             
+        }
+
+        // Change plant setting
+        function changePlantSetting($user_id, $plant_name, $buy_date, $new_amount, $new_buy_location, $new_linked_device_id){
+            if(!$this->checkPlantExist($user_id, $plant_name, $buy_date)){
+                return 0;
+            }
+            $convert_user_id = (int)$user_id;
+            $convert_amount = (int)$new_amount;
+            $stmt =$this->con->prepare("UPDATE plant SET Buy_location = ?, Amount = ?, linked_device_id = ? 
+            WHERE User_ID = ? AND Plant_name = ? AND Buy_date = ?");
+            $stmt->bind_param("sisiss", $new_buy_location, $convert_amount, $new_linked_device_id, $convert_user_id, $plant_name, $buy_date);
+            if($stmt->execute()){
+                return 1;
+            }
+            else{
+                return 2;
+            }
         }
     }
